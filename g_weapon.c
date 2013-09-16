@@ -549,7 +549,7 @@ fire_rocket
 */
 void rocket_touch (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf)
 {
-	vec3_t		origin;
+	vec3_t		origin, forward, right, left;
 	int			n;
 
 	if (other == ent->owner)
@@ -594,6 +594,13 @@ void rocket_touch (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *su
 		gi.WriteByte (TE_ROCKET_EXPLOSION);
 	gi.WritePosition (origin);
 	gi.multicast (ent->s.origin, MULTICAST_PHS);
+	if (ent->owner->client)
+	{
+		fire_grenade2 (ent, ent->s.origin, plane->normal, 100, 325, 3, 120, true);
+		fire_grenade2 (ent, ent->s.origin, plane->normal, 100, 650, 2, 120, true);
+		fire_grenade2 (ent, ent->s.origin, right, 100, 325, 3, 120, true);
+		fire_grenade2 (ent, ent->s.origin, right, 100, 650, 2, 120, true);
+	}
 
 	G_FreeEdict (ent);
 }
