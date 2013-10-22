@@ -655,12 +655,15 @@ void T_RadiusDamage (edict_t *inflictor, edict_t *attacker, float damage, edict_
 #define DEFAULT_SSHOTGUN_COUNT	20
 
 //custom flags
-#define CLOAK_ACTIVATE_TIME			1.5		// cloak after 1.5 seconds
+#define CLOAK_ACTIVATE_TIME			1	// cloak after x seconds
 #define CLOAK_DRAIN					20		// every CLOAK_DRAIN frames,
 #define CLOAK_AMMO					1		// drain CLOAK_AMMO amount of cells
-#define MERC 1
-#define SPY 2
-
+#define IR_DRAIN					5
+#define MERC						1
+#define SPY							2
+#define MOD_SNIPER_CHEST			34
+#define MOD_SNIPER_LEG				35
+#define MOD_SNIPER_HEAD				36
 
 //
 // g_monster.c
@@ -830,7 +833,7 @@ typedef struct
 	int			health;
 	int			max_health;
 	int			savedFlags;
-
+	int			player_armor;
 	int			selected_item;
 	int			inventory[MAX_ITEMS];
 
@@ -952,6 +955,9 @@ struct gclient_s
 	qboolean	cloaking;
 	float		cloaktime;
 	int			cloakdrain;
+
+	int goggles;
+	int goggledrain;
 	edict_t		*chase_target;		// player we are chasing
 	qboolean	update_chase;		// need to update chase info?
 };

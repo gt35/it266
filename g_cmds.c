@@ -902,6 +902,19 @@ void Cmd_Cloak_f (edict_t *ent)
 		ent->client->cloaking = false;
 	}
 }
+void Cmd_Infrared_f (edict_t *ent) // IR Goggles
+{
+        if (ent->client->goggles) // we're on
+        {
+               ent->client->goggles = 0;
+               ent->client->ps.rdflags &= ~RDF_IRGOGGLES;
+        }
+        else // we're off
+        {
+               ent->client->goggles = 1;
+               ent->client->ps.rdflags |= RDF_IRGOGGLES;
+        }
+}
 
 /*
 =================
@@ -1009,9 +1022,12 @@ void ClientCommand (edict_t *ent)
 	}
 	else if (Q_stricmp(cmd, "playerlist") == 0)
 		Cmd_PlayerList_f(ent);
-	else if (Q_stricmp (cmd, "cloak") == 0){
+	else if (Q_stricmp (cmd, "ability") == 0){
 		if (ent->client->resp.pclass == SPY){
 			Cmd_Cloak_f (ent);
+		}
+		if (ent->client->resp.pclass == MERC){
+			Cmd_Infrared_f (ent);
 		}
 	}
 	else	// anything that doesn't match a command will be a chat

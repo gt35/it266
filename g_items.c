@@ -14,8 +14,10 @@ void Weapon_HyperBlaster (edict_t *ent);
 void Weapon_RocketLauncher (edict_t *ent);
 void Weapon_Grenade (edict_t *ent);
 void Weapon_GrenadeLauncher (edict_t *ent);
+void Weapon_MineLauncher (edict_t *ent);
 void Weapon_Railgun (edict_t *ent);
 void Weapon_BFG (edict_t *ent);
+void Weapon_SniperRifle (edict_t *ent);
 
 gitem_armor_t jacketarmor_info	= { 25,  50, .30, .00, ARMOR_JACKET};
 gitem_armor_t combatarmor_info	= { 50, 100, .60, .30, ARMOR_COMBAT};
@@ -660,6 +662,8 @@ qboolean Pickup_Armor (edict_t *ent, edict_t *other)
 
 	if (!(ent->spawnflags & DROPPED_ITEM) && (deathmatch->value))
 		SetRespawn (ent, 20);
+	   if ((other->client->pers.inventory[jacket_armor_index]) + (other->client->pers.inventory[combat_armor_index]) + (other->client->pers.inventory[body_armor_index]) > (other->client->pers.player_armor))
+        other->client->pers.inventory[old_armor_index] = other->client->pers.player_armor;
 
 	return true;
 }
@@ -1041,67 +1045,67 @@ be on an entity that hasn't spawned yet.
 */
 void SpawnItem (edict_t *ent, gitem_t *item)
 {
-	  if (deathmatch->value) 
-    { 
-		 if (strcmp(ent->classname, "item_armor_shard") == 0) 
-        { 
-            ent->classname = "ammo_cells"; 
-            item = FindItemByClassname ("ammo_cells"); 
-        } 
-        if (strcmp(ent->classname, "weapon_shotgun") == 0) 
-        { 
-            ent->classname = "ammo_shells"; 
-            item = FindItemByClassname ("ammo_shells"); 
-        } 
+	if (deathmatch->value) 
+	{ 
+		if (strcmp(ent->classname, "item_armor_shard") == 0) 
+		{ 
+			ent->classname = "ammo_cells"; 
+			item = FindItemByClassname ("ammo_cells"); 
+		} 
+		if (strcmp(ent->classname, "weapon_shotgun") == 0) 
+		{ 
+			ent->classname = "ammo_shells"; 
+			item = FindItemByClassname ("ammo_shells"); 
+		} 
 
-        if (strcmp(ent->classname, "weapon_supershotgun") == 0) 
-        { 
-            ent->classname = "ammo_shells"; 
-            item = FindItemByClassname ("ammo_shells"); 
-        } 
+		if (strcmp(ent->classname, "weapon_supershotgun") == 0) 
+		{ 
+			ent->classname = "ammo_shells"; 
+			item = FindItemByClassname ("ammo_shells"); 
+		} 
 
-        if (strcmp(ent->classname, "weapon_machinegun") == 0) 
-        { 
-            ent->classname = "ammo_bullets"; 
-            item = FindItemByClassname ("ammo_bullets"); 
-        } 
+		if (strcmp(ent->classname, "weapon_machinegun") == 0) 
+		{ 
+			ent->classname = "ammo_bullets"; 
+			item = FindItemByClassname ("ammo_bullets"); 
+		} 
 
-        if (strcmp(ent->classname, "weapon_chaingun") == 0) 
-        { 
-            ent->classname = "ammo_bullets"; 
-            item = FindItemByClassname ("ammo_bullets"); 
-        } 
+		if (strcmp(ent->classname, "weapon_chaingun") == 0) 
+		{ 
+			ent->classname = "ammo_bullets"; 
+			item = FindItemByClassname ("ammo_bullets"); 
+		} 
 
-        if (strcmp(ent->classname, "weapon_grenadelauncher") == 0) 
-        { 
-            ent->classname = "ammo_grenades"; 
-            item = FindItemByClassname ("ammo_grenades"); 
-        } 
+		if (strcmp(ent->classname, "weapon_grenadelauncher") == 0) 
+		{ 
+			ent->classname = "ammo_grenades"; 
+			item = FindItemByClassname ("ammo_grenades"); 
+		} 
 
-        if (strcmp(ent->classname, "weapon_rocketlauncher") == 0) 
-        { 
-            ent->classname = "ammo_rockets"; 
-            item = FindItemByClassname ("ammo_rockets"); 
-        } 
+		if (strcmp(ent->classname, "weapon_rocketlauncher") == 0) 
+		{ 
+			ent->classname = "ammo_rockets"; 
+			item = FindItemByClassname ("ammo_rockets"); 
+		} 
 
-        if (strcmp(ent->classname, "weapon_railgun") == 0) 
-        { 
-            ent->classname = "ammo_slugs"; 
-            item = FindItemByClassname ("ammo_slugs"); 
-        } 
-   
-        if (strcmp(ent->classname, "weapon_hyperblaster") == 0) 
-        { 
-            ent->classname = "ammo_cells"; 
-            item = FindItemByClassname ("ammo_cells"); 
-        } 
+		if (strcmp(ent->classname, "weapon_railgun") == 0) 
+		{ 
+			ent->classname = "ammo_slugs"; 
+			item = FindItemByClassname ("ammo_slugs"); 
+		} 
 
-        if (strcmp(ent->classname, "weapon_bfg") == 0) 
-        { 
-            ent->classname = "ammo_cells"; 
-            item = FindItemByClassname ("ammo_cells"); 
-        } 
-    }
+		if (strcmp(ent->classname, "weapon_hyperblaster") == 0) 
+		{ 
+			ent->classname = "ammo_cells"; 
+			item = FindItemByClassname ("ammo_cells"); 
+		} 
+
+		if (strcmp(ent->classname, "weapon_bfg") == 0) 
+		{ 
+			ent->classname = "ammo_cells"; 
+			item = FindItemByClassname ("ammo_cells"); 
+		} 
+	}
 	PrecacheItem (item);
 
 	if (ent->spawnflags)
@@ -1488,6 +1492,26 @@ gitem_t	itemlist[] =
 									0,
 									/* precache */ "models/objects/grenade/tris.md2 weapons/grenlf1a.wav weapons/grenlr1b.wav weapons/grenlb1b.wav"
 								},
+								{
+								"weapon_minelauncher",
+									Pickup_Weapon,
+									Use_Weapon,
+									Drop_Weapon,
+									Weapon_MineLauncher,
+									"misc/w_pkup.wav",
+									"models/weapons/g_launch/tris.md2", EF_ROTATE,
+									"models/weapons/v_launch/tris.md2",
+									/* icon */		"w_glauncher",
+									/* pickup */	"Mine Launcher",
+									0,
+									1,
+									"Grenades",
+									IT_WEAPON|IT_STAY_COOP,
+									WEAP_GRENADELAUNCHER,
+									NULL,
+									0,
+									/* precache */ "models/objects/grenade/tris.md2 weapons/grenlf1a.wav weapons/grenlr1b.wav weapons/grenlb1b.wav"
+								},
 
 								/*QUAKED weapon_rocketlauncher (.3 .3 1) (-16 -16 -16) (16 16 16)
 								*/
@@ -1580,6 +1604,30 @@ gitem_t	itemlist[] =
 											0,
 											/* precache */ "sprites/s_bfg1.sp2 sprites/s_bfg2.sp2 sprites/s_bfg3.sp2 weapons/bfg__f1y.wav weapons/bfg__l1a.wav weapons/bfg__x1b.wav weapons/bfg_hum.wav"
 										},
+										/*QUAKED weapon_sniper (.3 .3 1) (-16 -16 -16) (16 16 16)
+
+										*/
+										{
+											"weapon_sniper",//weapon function 
+												Pickup_Weapon,
+												Use_Weapon,
+												Drop_Weapon,
+												Weapon_SniperRifle,//corresponds with the top of g_items.c
+												"misc/w_pkup.wav",
+												"models/weapons/g_rail/tris.md2", EF_ROTATE,//rotating model
+												"models/weapons/v_rail/tris.md2",//model as seen in your hand
+												/* icon */        "w_railgun",
+												/* pickup */    "Sniper Rifle",
+												0,
+												1,//amount of ammo
+												"Slugs",//type of ammo
+												IT_WEAPON|IT_STAY_COOP,
+
+												WEAP_RAILGUN,//new line in 3.20
+												NULL,
+												0,
+												/* precache */ "weapons/rg_hum.wav"
+										},
 
 										//
 										// AMMO ITEMS
@@ -1606,29 +1654,29 @@ gitem_t	itemlist[] =
 												NULL,
 												AMMO_SHELLS,
 												/* precache */ ""
-										},
+											},
 
-										/*QUAKED ammo_bullets (.3 .3 1) (-16 -16 -16) (16 16 16)
-										*/
-										{
-											"ammo_bullets",
-												Pickup_Ammo,
-												NULL,
-												Drop_Ammo,
-												NULL,
-												"misc/am_pkup.wav",
-												"models/items/ammo/bullets/medium/tris.md2", 0,
-												NULL,
-												/* icon */		"a_bullets",
-												/* pickup */	"Bullets",
-												/* width */		3,
-												50,
-												NULL,
-												IT_AMMO,
-												0,
-												NULL,
-												AMMO_BULLETS,
-												/* precache */ ""
+											/*QUAKED ammo_bullets (.3 .3 1) (-16 -16 -16) (16 16 16)
+											*/
+											{
+												"ammo_bullets",
+													Pickup_Ammo,
+													NULL,
+													Drop_Ammo,
+													NULL,
+													"misc/am_pkup.wav",
+													"models/items/ammo/bullets/medium/tris.md2", 0,
+													NULL,
+													/* icon */		"a_bullets",
+													/* pickup */	"Bullets",
+													/* width */		3,
+													50,
+													NULL,
+													IT_AMMO,
+													0,
+													NULL,
+													AMMO_BULLETS,
+													/* precache */ ""
 											},
 
 											/*QUAKED ammo_cells (.3 .3 1) (-16 -16 -16) (16 16 16)
@@ -1652,29 +1700,29 @@ gitem_t	itemlist[] =
 													NULL,
 													AMMO_CELLS,
 													/* precache */ ""
-											},
+												},
 
-											/*QUAKED ammo_rockets (.3 .3 1) (-16 -16 -16) (16 16 16)
-											*/
-											{
-												"ammo_rockets",
-													Pickup_Ammo,
-													NULL,
-													Drop_Ammo,
-													NULL,
-													"misc/am_pkup.wav",
-													"models/items/ammo/rockets/medium/tris.md2", 0,
-													NULL,
-													/* icon */		"a_rockets",
-													/* pickup */	"Rockets",
-													/* width */		3,
-													5,
-													NULL,
-													IT_AMMO,
-													0,
-													NULL,
-													AMMO_ROCKETS,
-													/* precache */ ""
+												/*QUAKED ammo_rockets (.3 .3 1) (-16 -16 -16) (16 16 16)
+												*/
+												{
+													"ammo_rockets",
+														Pickup_Ammo,
+														NULL,
+														Drop_Ammo,
+														NULL,
+														"misc/am_pkup.wav",
+														"models/items/ammo/rockets/medium/tris.md2", 0,
+														NULL,
+														/* icon */		"a_rockets",
+														/* pickup */	"Rockets",
+														/* width */		3,
+														5,
+														NULL,
+														IT_AMMO,
+														0,
+														NULL,
+														AMMO_ROCKETS,
+														/* precache */ ""
 												},
 
 												/*QUAKED ammo_slugs (.3 .3 1) (-16 -16 -16) (16 16 16)
@@ -1698,33 +1746,33 @@ gitem_t	itemlist[] =
 														NULL,
 														AMMO_SLUGS,
 														/* precache */ ""
-												},
+													},
 
 
-												//
-												// POWERUP ITEMS
-												//
-												/*QUAKED item_quad (.3 .3 1) (-16 -16 -16) (16 16 16)
-												*/
-												{
-													"item_quad", 
-														Pickup_Powerup,
-														Use_Quad,
-														Drop_General,
-														NULL,
-														"items/pkup.wav",
-														"models/items/quaddama/tris.md2", EF_ROTATE,
-														NULL,
-														/* icon */		"p_quad",
-														/* pickup */	"Quad Damage",
-														/* width */		2,
-														60,
-														NULL,
-														IT_POWERUP,
-														0,
-														NULL,
-														0,
-														/* precache */ "items/damage.wav items/damage2.wav items/damage3.wav"
+													//
+													// POWERUP ITEMS
+													//
+													/*QUAKED item_quad (.3 .3 1) (-16 -16 -16) (16 16 16)
+													*/
+													{
+														"item_quad", 
+															Pickup_Powerup,
+															Use_Quad,
+															Drop_General,
+															NULL,
+															"items/pkup.wav",
+															"models/items/quaddama/tris.md2", EF_ROTATE,
+															NULL,
+															/* icon */		"p_quad",
+															/* pickup */	"Quad Damage",
+															/* width */		2,
+															60,
+															NULL,
+															IT_POWERUP,
+															0,
+															NULL,
+															0,
+															/* precache */ "items/damage.wav items/damage2.wav items/damage3.wav"
 													},
 
 													/*QUAKED item_invulnerability (.3 .3 1) (-16 -16 -16) (16 16 16)
@@ -1748,29 +1796,29 @@ gitem_t	itemlist[] =
 															NULL,
 															0,
 															/* precache */ "items/protect.wav items/protect2.wav items/protect4.wav"
-													},
+														},
 
-													/*QUAKED item_silencer (.3 .3 1) (-16 -16 -16) (16 16 16)
-													*/
-													{
-														"item_silencer",
-															Pickup_Powerup,
-															Use_Silencer,
-															Drop_General,
-															NULL,
-															"items/pkup.wav",
-															"models/items/silencer/tris.md2", EF_ROTATE,
-															NULL,
-															/* icon */		"p_silencer",
-															/* pickup */	"Silencer",
-															/* width */		2,
-															60,
-															NULL,
-															IT_POWERUP,
-															0,
-															NULL,
-															0,
-															/* precache */ ""
+														/*QUAKED item_silencer (.3 .3 1) (-16 -16 -16) (16 16 16)
+														*/
+														{
+															"item_silencer",
+																Pickup_Powerup,
+																Use_Silencer,
+																Drop_General,
+																NULL,
+																"items/pkup.wav",
+																"models/items/silencer/tris.md2", EF_ROTATE,
+																NULL,
+																/* icon */		"p_silencer",
+																/* pickup */	"Silencer",
+																/* width */		2,
+																60,
+																NULL,
+																IT_POWERUP,
+																0,
+																NULL,
+																0,
+																/* precache */ ""
 														},
 
 														/*QUAKED item_breather (.3 .3 1) (-16 -16 -16) (16 16 16)
@@ -1794,29 +1842,29 @@ gitem_t	itemlist[] =
 																NULL,
 																0,
 																/* precache */ "items/airout.wav"
-														},
+															},
 
-														/*QUAKED item_enviro (.3 .3 1) (-16 -16 -16) (16 16 16)
-														*/
-														{
-															"item_enviro",
-																Pickup_Powerup,
-																Use_Envirosuit,
-																Drop_General,
-																NULL,
-																"items/pkup.wav",
-																"models/items/enviro/tris.md2", EF_ROTATE,
-																NULL,
-																/* icon */		"p_envirosuit",
-																/* pickup */	"Environment Suit",
-																/* width */		2,
-																60,
-																NULL,
-																IT_STAY_COOP|IT_POWERUP,
-																0,
-																NULL,
-																0,
-																/* precache */ "items/airout.wav"
+															/*QUAKED item_enviro (.3 .3 1) (-16 -16 -16) (16 16 16)
+															*/
+															{
+																"item_enviro",
+																	Pickup_Powerup,
+																	Use_Envirosuit,
+																	Drop_General,
+																	NULL,
+																	"items/pkup.wav",
+																	"models/items/enviro/tris.md2", EF_ROTATE,
+																	NULL,
+																	/* icon */		"p_envirosuit",
+																	/* pickup */	"Environment Suit",
+																	/* width */		2,
+																	60,
+																	NULL,
+																	IT_STAY_COOP|IT_POWERUP,
+																	0,
+																	NULL,
+																	0,
+																	/* precache */ "items/airout.wav"
 															},
 
 															/*QUAKED item_ancient_head (.3 .3 1) (-16 -16 -16) (16 16 16)
@@ -1841,30 +1889,30 @@ gitem_t	itemlist[] =
 																	NULL,
 																	0,
 																	/* precache */ ""
-															},
+																},
 
-															/*QUAKED item_adrenaline (.3 .3 1) (-16 -16 -16) (16 16 16)
-															gives +1 to maximum health
-															*/
-															{
-																"item_adrenaline",
-																	Pickup_Adrenaline,
-																	NULL,
-																	NULL,
-																	NULL,
-																	"items/pkup.wav",
-																	"models/items/adrenal/tris.md2", EF_ROTATE,
-																	NULL,
-																	/* icon */		"p_adrenaline",
-																	/* pickup */	"Adrenaline",
-																	/* width */		2,
-																	60,
-																	NULL,
-																	0,
-																	0,
-																	NULL,
-																	0,
-																	/* precache */ ""
+																/*QUAKED item_adrenaline (.3 .3 1) (-16 -16 -16) (16 16 16)
+																gives +1 to maximum health
+																*/
+																{
+																	"item_adrenaline",
+																		Pickup_Adrenaline,
+																		NULL,
+																		NULL,
+																		NULL,
+																		"items/pkup.wav",
+																		"models/items/adrenal/tris.md2", EF_ROTATE,
+																		NULL,
+																		/* icon */		"p_adrenaline",
+																		/* pickup */	"Adrenaline",
+																		/* width */		2,
+																		60,
+																		NULL,
+																		0,
+																		0,
+																		NULL,
+																		0,
+																		/* precache */ ""
 																},
 
 																/*QUAKED item_bandolier (.3 .3 1) (-16 -16 -16) (16 16 16)
@@ -1888,29 +1936,29 @@ gitem_t	itemlist[] =
 																		NULL,
 																		0,
 																		/* precache */ ""
-																},
+																	},
 
-																/*QUAKED item_pack (.3 .3 1) (-16 -16 -16) (16 16 16)
-																*/
-																{
-																	"item_pack",
-																		Pickup_Pack,
-																		NULL,
-																		NULL,
-																		NULL,
-																		"items/pkup.wav",
-																		"models/items/pack/tris.md2", EF_ROTATE,
-																		NULL,
-																		/* icon */		"i_pack",
-																		/* pickup */	"Ammo Pack",
-																		/* width */		2,
-																		180,
-																		NULL,
-																		0,
-																		0,
-																		NULL,
-																		0,
-																		/* precache */ ""
+																	/*QUAKED item_pack (.3 .3 1) (-16 -16 -16) (16 16 16)
+																	*/
+																	{
+																		"item_pack",
+																			Pickup_Pack,
+																			NULL,
+																			NULL,
+																			NULL,
+																			"items/pkup.wav",
+																			"models/items/pack/tris.md2", EF_ROTATE,
+																			NULL,
+																			/* icon */		"i_pack",
+																			/* pickup */	"Ammo Pack",
+																			/* width */		2,
+																			180,
+																			NULL,
+																			0,
+																			0,
+																			NULL,
+																			0,
+																			/* precache */ ""
 																	},
 
 																	//
@@ -1938,30 +1986,30 @@ gitem_t	itemlist[] =
 																			NULL,
 																			0,
 																			/* precache */ ""
-																	},
+																		},
 
-																	/*QUAKED key_power_cube (0 .5 .8) (-16 -16 -16) (16 16 16) TRIGGER_SPAWN NO_TOUCH
-																	warehouse circuits
-																	*/
-																	{
-																		"key_power_cube",
-																			Pickup_Key,
-																			NULL,
-																			Drop_General,
-																			NULL,
-																			"items/pkup.wav",
-																			"models/items/keys/power/tris.md2", EF_ROTATE,
-																			NULL,
-																			"k_powercube",
-																			"Power Cube",
-																			2,
-																			0,
-																			NULL,
-																			IT_STAY_COOP|IT_KEY,
-																			0,
-																			NULL,
-																			0,
-																			/* precache */ ""
+																		/*QUAKED key_power_cube (0 .5 .8) (-16 -16 -16) (16 16 16) TRIGGER_SPAWN NO_TOUCH
+																		warehouse circuits
+																		*/
+																		{
+																			"key_power_cube",
+																				Pickup_Key,
+																				NULL,
+																				Drop_General,
+																				NULL,
+																				"items/pkup.wav",
+																				"models/items/keys/power/tris.md2", EF_ROTATE,
+																				NULL,
+																				"k_powercube",
+																				"Power Cube",
+																				2,
+																				0,
+																				NULL,
+																				IT_STAY_COOP|IT_KEY,
+																				0,
+																				NULL,
+																				0,
+																				/* precache */ ""
 																		},
 
 																		/*QUAKED key_pyramid (0 .5 .8) (-16 -16 -16) (16 16 16)
@@ -1986,30 +2034,30 @@ gitem_t	itemlist[] =
 																				NULL,
 																				0,
 																				/* precache */ ""
-																		},
+																			},
 
-																		/*QUAKED key_data_spinner (0 .5 .8) (-16 -16 -16) (16 16 16)
-																		key for the city computer
-																		*/
-																		{
-																			"key_data_spinner",
-																				Pickup_Key,
-																				NULL,
-																				Drop_General,
-																				NULL,
-																				"items/pkup.wav",
-																				"models/items/keys/spinner/tris.md2", EF_ROTATE,
-																				NULL,
-																				"k_dataspin",
-																				"Data Spinner",
-																				2,
-																				0,
-																				NULL,
-																				IT_STAY_COOP|IT_KEY,
-																				0,
-																				NULL,
-																				0,
-																				/* precache */ ""
+																			/*QUAKED key_data_spinner (0 .5 .8) (-16 -16 -16) (16 16 16)
+																			key for the city computer
+																			*/
+																			{
+																				"key_data_spinner",
+																					Pickup_Key,
+																					NULL,
+																					Drop_General,
+																					NULL,
+																					"items/pkup.wav",
+																					"models/items/keys/spinner/tris.md2", EF_ROTATE,
+																					NULL,
+																					"k_dataspin",
+																					"Data Spinner",
+																					2,
+																					0,
+																					NULL,
+																					IT_STAY_COOP|IT_KEY,
+																					0,
+																					NULL,
+																					0,
+																					/* precache */ ""
 																			},
 
 																			/*QUAKED key_pass (0 .5 .8) (-16 -16 -16) (16 16 16)
@@ -2034,30 +2082,30 @@ gitem_t	itemlist[] =
 																					NULL,
 																					0,
 																					/* precache */ ""
-																			},
+																				},
 
-																			/*QUAKED key_blue_key (0 .5 .8) (-16 -16 -16) (16 16 16)
-																			normal door key - blue
-																			*/
-																			{
-																				"key_blue_key",
-																					Pickup_Key,
-																					NULL,
-																					Drop_General,
-																					NULL,
-																					"items/pkup.wav",
-																					"models/items/keys/key/tris.md2", EF_ROTATE,
-																					NULL,
-																					"k_bluekey",
-																					"Blue Key",
-																					2,
-																					0,
-																					NULL,
-																					IT_STAY_COOP|IT_KEY,
-																					0,
-																					NULL,
-																					0,
-																					/* precache */ ""
+																				/*QUAKED key_blue_key (0 .5 .8) (-16 -16 -16) (16 16 16)
+																				normal door key - blue
+																				*/
+																				{
+																					"key_blue_key",
+																						Pickup_Key,
+																						NULL,
+																						Drop_General,
+																						NULL,
+																						"items/pkup.wav",
+																						"models/items/keys/key/tris.md2", EF_ROTATE,
+																						NULL,
+																						"k_bluekey",
+																						"Blue Key",
+																						2,
+																						0,
+																						NULL,
+																						IT_STAY_COOP|IT_KEY,
+																						0,
+																						NULL,
+																						0,
+																						/* precache */ ""
 																				},
 
 																				/*QUAKED key_red_key (0 .5 .8) (-16 -16 -16) (16 16 16)
@@ -2082,30 +2130,30 @@ gitem_t	itemlist[] =
 																						NULL,
 																						0,
 																						/* precache */ ""
-																				},
+																					},
 
-																				/*QUAKED key_commander_head (0 .5 .8) (-16 -16 -16) (16 16 16)
-																				tank commander's head
-																				*/
-																				{
-																					"key_commander_head",
-																						Pickup_Key,
-																						NULL,
-																						Drop_General,
-																						NULL,
-																						"items/pkup.wav",
-																						"models/monsters/commandr/head/tris.md2", EF_GIB,
-																						NULL,
-																						/* icon */		"k_comhead",
-																						/* pickup */	"Commander's Head",
-																						/* width */		2,
-																						0,
-																						NULL,
-																						IT_STAY_COOP|IT_KEY,
-																						0,
-																						NULL,
-																						0,
-																						/* precache */ ""
+																					/*QUAKED key_commander_head (0 .5 .8) (-16 -16 -16) (16 16 16)
+																					tank commander's head
+																					*/
+																					{
+																						"key_commander_head",
+																							Pickup_Key,
+																							NULL,
+																							Drop_General,
+																							NULL,
+																							"items/pkup.wav",
+																							"models/monsters/commandr/head/tris.md2", EF_GIB,
+																							NULL,
+																							/* icon */		"k_comhead",
+																							/* pickup */	"Commander's Head",
+																							/* width */		2,
+																							0,
+																							NULL,
+																							IT_STAY_COOP|IT_KEY,
+																							0,
+																							NULL,
+																							0,
+																							/* precache */ ""
 																					},
 
 																					/*QUAKED key_airstrike_target (0 .5 .8) (-16 -16 -16) (16 16 16)
@@ -2130,27 +2178,27 @@ gitem_t	itemlist[] =
 																							NULL,
 																							0,
 																							/* precache */ ""
-																					},
+																						},
 
-																					{
-																						NULL,
-																							Pickup_Health,
+																						{
 																							NULL,
-																							NULL,
-																							NULL,
-																							"items/pkup.wav",
-																							NULL, 0,
-																							NULL,
-																							/* icon */		"i_health",
-																							/* pickup */	"Health",
-																							/* width */		3,
-																							0,
-																							NULL,
-																							0,
-																							0,
-																							NULL,
-																							0,
-																							/* precache */ "items/s_health.wav items/n_health.wav items/l_health.wav items/m_health.wav"
+																								Pickup_Health,
+																								NULL,
+																								NULL,
+																								NULL,
+																								"items/pkup.wav",
+																								NULL, 0,
+																								NULL,
+																								/* icon */		"i_health",
+																								/* pickup */	"Health",
+																								/* width */		3,
+																								0,
+																								NULL,
+																								0,
+																								0,
+																								NULL,
+																								0,
+																								/* precache */ "items/s_health.wav items/n_health.wav items/l_health.wav items/m_health.wav"
 																						},
 
 																						// end of list marker

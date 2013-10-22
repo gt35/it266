@@ -208,6 +208,20 @@ void ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 
 		switch (mod)
 		{
+			//sniper rifle death messages
+		case MOD_SNIPER_CHEST:
+			message = "was pierced by";
+			message2 = "'s sniper rifle";
+			break;
+		case MOD_SNIPER_LEG:
+			message = "has lost a leg thanks to";
+			message2 = "'s sniper rifle";
+			break;
+		case MOD_SNIPER_HEAD:
+			message = "recieved a lobotomy from";
+			message2 = "'s sniper rifle";
+			break;
+			//end sniper rifle death messages
 		case MOD_SUICIDE:
 			message = "suicides";
 			break;
@@ -593,6 +607,9 @@ void InitClientPersistant (gclient_t *client)
 		gitem_t         *item;
 
 		memset (&client->pers, 0, sizeof(client->pers));
+		item = FindItem("Cells");
+		client->pers.selected_item = ITEM_INDEX(item);
+		client->pers.inventory[client->pers.selected_item] = 200;
 
 		item = FindItem("Blaster");
 		client->pers.selected_item = ITEM_INDEX(item);
@@ -609,7 +626,7 @@ void InitClientPersistant (gclient_t *client)
 		item = FindItem("Rocket Launcher");
 		client->pers.selected_item = ITEM_INDEX(item);
 		client->pers.inventory[client->pers.selected_item] = 1;
-
+		client->pers.player_armor = 300;
 		client->pers.weapon = item;
 	}
 	else if (client->resp.pclass == SPY)
@@ -624,12 +641,18 @@ void InitClientPersistant (gclient_t *client)
 		client->pers.inventory[client->pers.selected_item] = 30;
 		item = FindItem("Cells");
 		client->pers.selected_item = ITEM_INDEX(item);
-		client->pers.inventory[client->pers.selected_item] = 300;
-		item = FindItem("Railgun");
+		client->pers.inventory[client->pers.selected_item] = 200;
+		item = FindItem("Sniper Rifle");
 		client->pers.selected_item = ITEM_INDEX(item);
 		client->pers.inventory[client->pers.selected_item] = 1;
-
+		item = FindItem("Mine Launcher");
+		client->pers.selected_item = ITEM_INDEX(item);
+		client->pers.inventory[client->pers.selected_item] = 1;
+		item = FindItem("Grenades");
+		client->pers.selected_item = ITEM_INDEX(item);
+		client->pers.inventory[client->pers.selected_item] = 10;
 		client->pers.weapon = item;
+		client->pers.player_armor = 1;
 	}
 	else 
 	{
@@ -1801,6 +1824,24 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 						ent->client->cloaking = true;
 					}
 				}
+			}
+		}
+		// handle IR goggle ability
+		if (ent->client->goggles)
+		{
+			if (ent->client->pers.inventory[ITEM_INDEX(FindItem("Cells"))] >= 1)
+			{
+				ent->client->goggledrain ++;
+				if (ent->client->goggledrain == IR_DRAIN)
+				{
+					ent->client->pers.inventory[ITEM_INDEX(FindItem("Cells"))] -= 1;
+					ent->client->goggledrain = 0;
+				}
+			}
+			else
+			{
+				ent->client->ps.rdflags &= ~RDF_IRGOGGLES;
+				ent->client->goggles = 0;
 			}
 		}
 		gi.linkentity (ent);
