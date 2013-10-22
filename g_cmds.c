@@ -880,6 +880,28 @@ void Cmd_PlayerList_f(edict_t *ent)
 	gi.cprintf(ent, PRINT_HIGH, "%s", text);
 }
 
+/*
+==================
+Cmd_Cloak_f
+==================
+*/
+
+void Cmd_Cloak_f (edict_t *ent)
+{
+	if (ent->client->cloakable ^= 1)
+	{
+		gi.centerprintf (ent, "Motion Cloaking Enabled!\n");
+		ent->client->cloaktime = level.time + CLOAK_ACTIVATE_TIME;
+		ent->client->cloaking = true;
+		ent->client->cloakdrain = 0;
+	}
+	else
+	{
+		gi.centerprintf (ent, "Motion Cloaking Disabled!\n");
+		ent->svflags &= ~SVF_NOCLIENT;
+		ent->client->cloaking = false;
+	}
+}
 
 /*
 =================
@@ -968,25 +990,30 @@ void ClientCommand (edict_t *ent)
 		Cmd_Wave_f (ent);
 	else if (Q_stricmp (cmd, "merc") == 0)
 	{
-		ent->client->resp.pclass = 1;
+		ent->client->resp.pclass = MERC;
 		EndObserverMode(ent);
 	}
 	else if (Q_stricmp (cmd, "spy") == 0) 
 	{
-		ent->client->resp.pclass = 2;
+		ent->client->resp.pclass = SPY;
 		EndObserverMode(ent);
 	}
 	else if (Q_stricmp (cmd, "class") == 0) 
 	{
-		if (ent->client->resp.pclass == 1)
+		if (ent->client->resp.pclass == MERC)
 			gi.cprintf(ent, PRINT_HIGH, "You are a merc.\n");
-		else if (ent->client->resp.pclass == 2)
+		else if (ent->client->resp.pclass == SPY)
 			gi.cprintf(ent, PRINT_HIGH, "You are a spy.\n");
 		else
 			gi.cprintf(ent, PRINT_HIGH, "You are an OBSERVER.\n");
 	}
 	else if (Q_stricmp(cmd, "playerlist") == 0)
 		Cmd_PlayerList_f(ent);
+	else if (Q_stricmp (cmd, "cloak") == 0){
+		if (ent->client->resp.pclass == SPY){
+			Cmd_Cloak_f (ent);
+		}
+	}
 	else	// anything that doesn't match a command will be a chat
 		Cmd_Say_f (ent, false, true);
 }

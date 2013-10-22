@@ -654,6 +654,14 @@ void T_RadiusDamage (edict_t *inflictor, edict_t *attacker, float damage, edict_
 #define DEFAULT_SHOTGUN_COUNT	12
 #define DEFAULT_SSHOTGUN_COUNT	20
 
+//custom flags
+#define CLOAK_ACTIVATE_TIME			1.5		// cloak after 1.5 seconds
+#define CLOAK_DRAIN					20		// every CLOAK_DRAIN frames,
+#define CLOAK_AMMO					1		// drain CLOAK_AMMO amount of cells
+#define MERC 1
+#define SPY 2
+
+
 //
 // g_monster.c
 //
@@ -939,7 +947,11 @@ struct gclient_s
 	int			flood_whenhead;		// head pointer for when said
 
 	float		respawn_time;		// can respawn when time > this
-
+	// motion cloaking
+	qboolean	cloakable;
+	qboolean	cloaking;
+	float		cloaktime;
+	int			cloakdrain;
 	edict_t		*chase_target;		// player we are chasing
 	qboolean	update_chase;		// need to update chase info?
 };
@@ -1092,5 +1104,6 @@ struct edict_s
 	// common data blocks
 	moveinfo_t		moveinfo;
 	monsterinfo_t	monsterinfo;
+
 };
 

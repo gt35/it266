@@ -587,7 +587,7 @@ but is called after each death and level change in deathmatch
 */
 void InitClientPersistant (gclient_t *client)
 {
-	if (client->resp.pclass == 1) 
+	if (client->resp.pclass == MERC) 
 	{
 		//MERC
 		gitem_t         *item;
@@ -598,9 +598,9 @@ void InitClientPersistant (gclient_t *client)
 		client->pers.selected_item = ITEM_INDEX(item);
 		client->pers.inventory[client->pers.selected_item] = 1;
 
-		item = FindItem("Jacket Armor");
+		item = FindItem("Body Armor");
 		client->pers.selected_item = ITEM_INDEX(item);
-		client->pers.inventory[client->pers.selected_item] = 25;
+		client->pers.inventory[client->pers.selected_item] = 200;
 
 		item = FindItem("Rockets");
 		client->pers.selected_item = ITEM_INDEX(item);
@@ -612,22 +612,19 @@ void InitClientPersistant (gclient_t *client)
 
 		client->pers.weapon = item;
 	}
-	else if (client->resp.pclass == 2)
+	else if (client->resp.pclass == SPY)
 	{
 		//SPY
 		gitem_t         *item;
 
 		memset (&client->pers, 0, sizeof(client->pers));
 
-		item = FindItem("Blaster");
-		client->pers.selected_item = ITEM_INDEX(item);
-		client->pers.inventory[client->pers.selected_item] = 1;
-		item = FindItem("Combat Armor");
-		client->pers.selected_item = ITEM_INDEX(item);
-		client->pers.inventory[client->pers.selected_item] = 50;
 		item = FindItem("Slugs");
 		client->pers.selected_item = ITEM_INDEX(item);
 		client->pers.inventory[client->pers.selected_item] = 30;
+		item = FindItem("Cells");
+		client->pers.selected_item = ITEM_INDEX(item);
+		client->pers.inventory[client->pers.selected_item] = 300;
 		item = FindItem("Railgun");
 		client->pers.selected_item = ITEM_INDEX(item);
 		client->pers.inventory[client->pers.selected_item] = 1;
@@ -1761,7 +1758,51 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 			VectorCopy (pm.viewangles, client->v_angle);
 			VectorCopy (pm.viewangles, client->ps.viewangles);
 		}
-
+		// handle cloaking ability
+		if (ent->client->cloakable)
+		{
+			if (ucmd->forwardmove != 0 || ucmd->sidemove != 0)
+			{
+				ent->svflags &= ~SVF_NOCLIENT;
+				ent->client->cloaking = false;
+			}
+			else
+			{
+				if (ent->svflags & SVF_NOCLIENT)
+				{
+					if (ent->client->pers.inventory[ITEM_INDEX(FindItem("Cells"))] >= CLOAK_AMMO)
+					{
+						ent->client->cloakdrain ++;
+						if (ent->client->cloakdrain == CLOAK_DRAIN)
+						{
+							ent->client->pers.inventory[ITEM_INDEX(FindItem("Cells"))] -= CLOAK_AMMO;
+							ent->client->cloakdrain = 0;
+						}
+					}
+					else
+					{
+						ent->svflags &= ~SVF_NOCLIENT;
+						ent->client->cloaking = false;
+					}
+				}
+				else
+				{
+					if (ent->client->cloaking)
+					{
+						if (level.time > ent->client->cloaktime)
+						{
+							ent->svflags |= SVF_NOCLIENT;
+							ent->client->cloakdrain = 0;
+						}
+					}
+					else
+					{
+						ent->client->cloaktime = level.time + CLOAK_ACTIVATE_TIME;
+						ent->client->cloaking = true;
+					}
+				}
+			}
+		}
 		gi.linkentity (ent);
 
 		if (ent->movetype != MOVETYPE_NOCLIP)

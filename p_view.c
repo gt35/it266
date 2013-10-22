@@ -25,20 +25,20 @@ float SV_CalcRoll (vec3_t angles, vec3_t velocity)
 	float	sign;
 	float	side;
 	float	value;
-	
+
 	side = DotProduct (velocity, right);
 	sign = side < 0 ? -1 : 1;
 	side = fabs(side);
-	
+
 	value = sv_rollangle->value;
 
 	if (side < sv_rollspeed->value)
 		side = side * value / sv_rollspeed->value;
 	else
 		side = value;
-	
+
 	return side*sign;
-	
+
 }
 
 
@@ -162,10 +162,10 @@ void P_DamageFeedback (edict_t *player)
 
 		VectorSubtract (client->damage_from, player->s.origin, v);
 		VectorNormalize (v);
-		
+
 		side = DotProduct (v, right);
 		client->v_dmg_roll = kick*side*0.3;
-		
+
 		side = -DotProduct (v, forward);
 		client->v_dmg_pitch = kick*side*0.3;
 
@@ -190,13 +190,13 @@ SV_CalcViewOffset
 
 Auto pitching on slopes?
 
-  fall from 128: 400 = 160000
-  fall from 256: 580 = 336400
-  fall from 384: 720 = 518400
-  fall from 512: 800 = 640000
-  fall from 640: 960 = 
+fall from 128: 400 = 160000
+fall from 256: 580 = 336400
+fall from 384: 720 = 518400
+fall from 512: 800 = 640000
+fall from 640: 960 = 
 
-  damage = deltavelocity*deltavelocity  * 0.0001
+damage = deltavelocity*deltavelocity  * 0.0001
 
 ===============
 */
@@ -209,7 +209,7 @@ void SV_CalcViewOffset (edict_t *ent)
 	vec3_t		v;
 
 
-//===================================
+	//===================================
 
 	// base angles
 	angles = ent->client->ps.kick_angles;
@@ -252,7 +252,7 @@ void SV_CalcViewOffset (edict_t *ent)
 
 		delta = DotProduct (ent->velocity, forward);
 		angles[PITCH] += delta*run_pitch->value;
-		
+
 		delta = DotProduct (ent->velocity, right);
 		angles[ROLL] += delta*run_roll->value;
 
@@ -270,7 +270,7 @@ void SV_CalcViewOffset (edict_t *ent)
 		angles[ROLL] += delta;
 	}
 
-//===================================
+	//===================================
 
 	// base origin
 
@@ -358,7 +358,7 @@ void SV_CalcGunOffset (edict_t *ent)
 
 	// gun height
 	VectorClear (ent->client->ps.gunoffset);
-//	ent->ps->gunorigin[2] += bob;
+	//	ent->ps->gunorigin[2] += bob;
 
 	// gun_x / gun_y / gun_z are development tools
 	for (i=0 ; i<3 ; i++)
@@ -419,7 +419,9 @@ void SV_CalcBlend (edict_t *ent)
 		SV_AddBlend (0.0, 0.1, 0.05, 0.6, ent->client->ps.blend);
 	else if (contents & CONTENTS_WATER)
 		SV_AddBlend (0.5, 0.3, 0.2, 0.4, ent->client->ps.blend);
-
+	// NEW CODE: cloaked - darken vision
+	if (ent->client->cloakable && (ent->svflags & SVF_NOCLIENT))
+		SV_AddBlend (-1, -1, -1, 0.3, ent->client->ps.blend);
 	// add for powerups
 	if (ent->client->quad_framenum > level.framenum)
 	{
@@ -457,7 +459,7 @@ void SV_CalcBlend (edict_t *ent)
 	// add for damage
 	if (ent->client->damage_alpha > 0)
 		SV_AddBlend (ent->client->damage_blend[0],ent->client->damage_blend[1]
-		,ent->client->damage_blend[2], ent->client->damage_alpha, ent->client->ps.blend);
+	,ent->client->damage_blend[2], ent->client->damage_alpha, ent->client->ps.blend);
 
 	if (ent->client->bonus_alpha > 0)
 		SV_AddBlend (0.85, 0.7, 0.3, ent->client->bonus_alpha, ent->client->ps.blend);
@@ -1008,7 +1010,7 @@ void ClientEndServerFrame (edict_t *ent)
 		else
 			bobmove = 0.0625;
 	}
-	
+
 	bobtime = (current_client->bobtime += bobmove);
 
 	if (current_client->ps.pmove.pm_flags & PMF_DUCKED)
