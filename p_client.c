@@ -623,10 +623,10 @@ void InitClientPersistant (gclient_t *client)
 
 		item = FindItem("Chaingun");
 		client->pers.selected_item = ITEM_INDEX(item);
-		client->pers.inventory[client->pers.selected_item] = 30;
+		client->pers.inventory[client->pers.selected_item] = 1;
 		item = FindItem("Bullets");
 		client->pers.selected_item = ITEM_INDEX(item);
-		client->pers.inventory[client->pers.selected_item] = 30;
+		client->pers.inventory[client->pers.selected_item] = 500;
 		item = FindItem("Rocket Launcher");
 		client->pers.selected_item = ITEM_INDEX(item);
 		client->pers.inventory[client->pers.selected_item] = 1;
@@ -647,9 +647,12 @@ void InitClientPersistant (gclient_t *client)
 		gitem_t         *item;
 
 		memset (&client->pers, 0, sizeof(client->pers));
-		item = FindItem("Bullets");
+		//item = FindItem("Bullets");
+		//client->pers.selected_item = ITEM_INDEX(item);
+		//client->pers.inventory[client->pers.selected_item] = 30;
+		item = FindItem("Blaster");
 		client->pers.selected_item = ITEM_INDEX(item);
-		client->pers.inventory[client->pers.selected_item] = 30;
+		client->pers.inventory[client->pers.selected_item] = 1;
 		item = FindItem("Slugs");
 		client->pers.selected_item = ITEM_INDEX(item);
 		client->pers.inventory[client->pers.selected_item] = 10;
@@ -665,9 +668,9 @@ void InitClientPersistant (gclient_t *client)
 		item = FindItem("Grenades");// flashbangs for spies
 		client->pers.selected_item = ITEM_INDEX(item);
 		client->pers.inventory[client->pers.selected_item] = 10;
-		item = FindItem("Machinegun");
+		/*item = FindItem("Machinegun");
 		client->pers.selected_item = ITEM_INDEX(item);
-		client->pers.inventory[client->pers.selected_item] = 1;
+		client->pers.inventory[client->pers.selected_item] = 1;*/
 		client->pers.weapon = item;
 		client->pers.player_armor = 0;
 	}
@@ -1364,7 +1367,7 @@ void EndObserverMode(edict_t* ent)
 	}
 
 	if (ent->client->resp.pclass == SPY)
-		gi.bprintf (PRINT_HIGH, "%s is a SPY. Ability:Passive cloaking. Loadout:Sniper, Machinegun, Flash grenades, Proxy mines.\n", ent->client->pers.netname); 
+		gi.bprintf (PRINT_HIGH, "%s is a SPY. Ability:Passive cloaking. Loadout:Sniper, Blaster, Flash grenades, Proxy mines.\n", ent->client->pers.netname); 
 
 	else if (ent->client->resp.pclass == MERC)
 		gi.bprintf (PRINT_HIGH, "%s is a MERC. Ability:IR goggles. Loadout:Seeker grenades, Chaingun, Rocket launcher, Armor.\n", ent->client->pers.netname); 
