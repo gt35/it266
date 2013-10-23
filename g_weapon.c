@@ -536,6 +536,15 @@ void Homing_Think(edict_t *grenade) {
 	else if (rand() % 20 == 0)
 		grenade->think (grenade); // blow it up randomly if it can't find a target
 }
+static void Grenade_Die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
+{
+	self->takedamage = DAMAGE_NO;
+	inflictor->takedamage = DAMAGE_NO;
+	attacker->takedamage = DAMAGE_NO;
+	self->nextthink = level.time + .1;
+	self->think = Grenade_Explode;
+}
+
 void Fire_Homing_Grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float damage_radius)
 {
 	edict_t *grenade;
@@ -554,7 +563,7 @@ void Fire_Homing_Grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage
 	VectorMA (grenade->velocity, 100 + random() * 30.0, up, grenade->velocity);
 	VectorMA (grenade->velocity, crandom() * 10.0, right, grenade->velocity);
 	VectorSet (grenade->avelocity, 300, 300, 300);
-	grenade->movetype = MOVETYPE_BOUNCE;
+	grenade->movetype = MOVETYPE_FLYMISSILE;
 	grenade->clipmask = MASK_SHOT;
 	grenade->solid = SOLID_BBOX;
 	grenade->s.effects |= EF_GRENADE;
@@ -566,6 +575,14 @@ void Fire_Homing_Grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage
 	grenade->spawnflags = 1;
 	grenade->s.sound = gi.soundindex("world/airhiss1.wav");
 	grenade->delay = level.time + 1.5;
+	//killable grenae code messes with homing ability
+
+	//grenade->mass = 0;
+	//grenade->health = 10;
+	//grenade->die = Grenade_Die;
+	//grenade->takedamage = DAMAGE_YES;
+	//grenade->monsterinfo.aiflags = AI_NOSTEP;
+
 	grenade->touch = Grenade_Touch;
 	grenade->prethink = Homing_Think;
 	grenade->nextthink = level.time + 10.0;
@@ -636,6 +653,7 @@ void Flash_Explode (edict_t *ent)
 	BecomeExplosion1(ent);
 }
 
+
 void Flash_Touch (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf)
 {
 	if (other == ent->owner)
@@ -674,7 +692,7 @@ static void proxim_think (edict_t *ent)
 {
 	edict_t *blip = NULL;
 
-	if (level.time > ent->delay*9999)
+	if (level.time > ent->delay*9999)// made it last forever
 	{
 		Grenade_Explode(ent);
 		return;
@@ -699,7 +717,6 @@ static void proxim_think (edict_t *ent)
 
 	ent->nextthink = level.time + .1;
 }
-
 void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, float damage_radius)
 {
 	edict_t	*grenade;
@@ -724,9 +741,16 @@ void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int s
 	grenade->s.modelindex = gi.modelindex ("models/objects/grenade/tris.md2");
 	grenade->owner = self;
 	grenade->touch = Grenade_Touch;
+	VectorSet(grenade->mins, -3, -3, 0);
+	VectorSet(grenade->maxs, 3, 3, 6);
+	grenade->mass = 2;
+	grenade->health = 10;
+	grenade->die = Grenade_Die;
+	grenade->takedamage = DAMAGE_YES;
+	grenade->monsterinfo.aiflags = AI_NOSTEP;
 	//grenade->nextthink = level.time + timer;
 	//grenade->think = Grenade_Explode;
-	grenade->nextthink = level.time + .1;
+	grenade->nextthink = level.time + .1;// prox mine code
 	grenade->think = proxim_think;
 	grenade->delay = level.time + 60;
 
@@ -735,6 +759,22 @@ void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int s
 	grenade->classname = "grenade";
 
 	gi.linkentity (grenade);
+}
+void Grenade_Think (edict_t *self)
+{
+	int x;
+
+	for(x = 0; x < 150; x++)  // constantly go down
+	{
+		self->s.origin[2] -= .25;
+		M_CheckGround(self);                  // check and see if on ground
+		if (self->groundentity)
+		{
+			self->s.origin[2] += 5;               // if on ground, raise it a bit
+			self->groundentity = NULL;
+		}
+	}
+	self->nextthink = level.time + FRAMETIME;
 }
 
 void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, float damage_radius, qboolean held)
@@ -763,16 +803,25 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 	grenade->touch = Grenade_Touch;
 	grenade->nextthink = level.time + timer;
 	grenade->think = Grenade_Explode;
+	grenade->mass = 2;
+	grenade->health = 10;
+	grenade->die = Grenade_Die;
+	grenade->takedamage = DAMAGE_YES;
+	grenade->monsterinfo.aiflags = AI_NOSTEP;
 	grenade->dmg = damage;
 	grenade->dmg_radius = damage_radius;
-	if ((self->client) && (self->client->grenadeType == GRENADE_FLASH))
+	if ((self->client) && (self->client->grenadeType == GRENADE_FLASH))//override if spy
 	{
 		grenade->touch = Flash_Touch;
 		grenade->think = Flash_Explode;
 		grenade->classname = "flash_grenade";
 	}
-	else
+	else{
 		grenade->classname = "hgrenade";
+		grenade->movetype =MOVETYPE_FLYMISSILE;//rolling homing grenade 
+		grenade->think = Grenade_Think;              //          
+		grenade->nextthink = level.time + FRAMETIME;
+	}
 	if (held)
 		grenade->spawnflags = 3;
 	else
@@ -787,6 +836,7 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 		gi.linkentity (grenade);
 	}
 }
+
 /*
 =================
 fire_proxmine

@@ -1364,10 +1364,10 @@ void EndObserverMode(edict_t* ent)
 	}
 
 	if (ent->client->resp.pclass == SPY)
-		gi.bprintf (PRINT_HIGH, "%s is a SPY. Ability: Passive cloaking.\n", ent->client->pers.netname); 
+		gi.bprintf (PRINT_HIGH, "%s is a SPY. Ability:Passive cloaking. Loadout:Sniper, Machinegun, Flash grenades, Proxy mines.\n", ent->client->pers.netname); 
 
 	else if (ent->client->resp.pclass == MERC)
-		gi.bprintf (PRINT_HIGH, "%s is a MERC. Ability: IR goggles.\n", ent->client->pers.netname); 
+		gi.bprintf (PRINT_HIGH, "%s is a MERC. Ability:IR goggles. Loadout:Seeker grenades, Chaingun, Rocket launcher, Armor.\n", ent->client->pers.netname); 
 
 }
 
@@ -1403,7 +1403,7 @@ void ClientBeginDeathmatch (edict_t *ent)
 	//}
 
 	gi.bprintf (PRINT_HIGH, "%s entered the game\n", ent->client->pers.netname);
-	gi.centerprintf (ent, "Welcome! \nchoose your side by typing\n 'merc' or 'spy' in console.\n\nGood luck, you'll need it...\n");
+	gi.centerprintf (ent, "Welcome! \nchoose your side by typing\n 'merc' or 'spy' in console.\nplease bind 'sniper rifle' and 'ability' \nfor a better experience.\nGood luck, you'll need it...\n");
 	// make sure all view stuff is valid
 	ClientEndServerFrame (ent);
 }

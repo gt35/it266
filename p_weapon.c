@@ -1531,4 +1531,3 @@ void Weapon_SniperRifle (edict_t *ent)
 	Weapon_Generic (ent, 3, 16, 56, 57, pause_frames, fire_frames, weapon_sniper_fire);
 }
 
-//======================================================================
