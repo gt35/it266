@@ -210,16 +210,13 @@ void ClientObituary (edict_t *self, edict_t *inflictor, edict_t *attacker)
 		{
 			//sniper rifle death messages
 		case MOD_SNIPER_CHEST:
-			message = "was pierced by";
-			message2 = "'s sniper rifle";
+			message = "was shot in the heart";
 			break;
 		case MOD_SNIPER_LEG:
-			message = "has lost a leg thanks to";
-			message2 = "'s sniper rifle";
+			message = "has lost a leg";
 			break;
 		case MOD_SNIPER_HEAD:
-			message = "recieved a lobotomy from";
-			message2 = "'s sniper rifle";
+			message = "recieved a lobotomy";
 			break;
 			//end sniper rifle death messages
 		case MOD_SUICIDE:
@@ -603,8 +600,9 @@ void InitClientPersistant (gclient_t *client)
 {
 	if (client->resp.pclass == MERC) 
 	{
-		//MERC
+		//MERC: IR goggles using ability, easier to see visible npcs but drains cells
 		gitem_t         *item;
+
 
 		memset (&client->pers, 0, sizeof(client->pers));
 		item = FindItem("Cells");
@@ -623,36 +621,55 @@ void InitClientPersistant (gclient_t *client)
 		client->pers.selected_item = ITEM_INDEX(item);
 		client->pers.inventory[client->pers.selected_item] = 30;
 
+		item = FindItem("Chaingun");
+		client->pers.selected_item = ITEM_INDEX(item);
+		client->pers.inventory[client->pers.selected_item] = 30;
+		item = FindItem("Bullets");
+		client->pers.selected_item = ITEM_INDEX(item);
+		client->pers.inventory[client->pers.selected_item] = 30;
 		item = FindItem("Rocket Launcher");
 		client->pers.selected_item = ITEM_INDEX(item);
 		client->pers.inventory[client->pers.selected_item] = 1;
-		client->pers.player_armor = 300;
+		client->pers.player_armor = 400;
 		client->pers.weapon = item;
+
+		item = FindItem("Grenades");//homing grenades/ jumping mines
+		client->pers.selected_item = ITEM_INDEX(item);
+		client->pers.inventory[client->pers.selected_item] = 10;
+
+		item = FindItem("Super Shotgun");
+		client->pers.selected_item = ITEM_INDEX(item);
+		client->pers.inventory[client->pers.selected_item] = 1;
 	}
 	else if (client->resp.pclass == SPY)
 	{
-		//SPY
+		//SPY: cloaks while ability is activated while standing still but drains cells.
 		gitem_t         *item;
 
 		memset (&client->pers, 0, sizeof(client->pers));
-
-		item = FindItem("Slugs");
+		item = FindItem("Bullets");
 		client->pers.selected_item = ITEM_INDEX(item);
 		client->pers.inventory[client->pers.selected_item] = 30;
+		item = FindItem("Slugs");
+		client->pers.selected_item = ITEM_INDEX(item);
+		client->pers.inventory[client->pers.selected_item] = 10;
 		item = FindItem("Cells");
 		client->pers.selected_item = ITEM_INDEX(item);
-		client->pers.inventory[client->pers.selected_item] = 200;
+		client->pers.inventory[client->pers.selected_item] = 100;
 		item = FindItem("Sniper Rifle");
 		client->pers.selected_item = ITEM_INDEX(item);
 		client->pers.inventory[client->pers.selected_item] = 1;
-		item = FindItem("Mine Launcher");
+		item = FindItem("Grenade Launcher");// really a proximity mine launcher
 		client->pers.selected_item = ITEM_INDEX(item);
 		client->pers.inventory[client->pers.selected_item] = 1;
-		item = FindItem("Grenades");
+		item = FindItem("Grenades");// flashbangs for spies
 		client->pers.selected_item = ITEM_INDEX(item);
 		client->pers.inventory[client->pers.selected_item] = 10;
+		item = FindItem("Machinegun");
+		client->pers.selected_item = ITEM_INDEX(item);
+		client->pers.inventory[client->pers.selected_item] = 1;
 		client->pers.weapon = item;
-		client->pers.player_armor = 1;
+		client->pers.player_armor = 0;
 	}
 	else 
 	{
@@ -1306,6 +1323,14 @@ void PutClientInServer (edict_t *ent)
 		return;
 	} else
 		client->resp.spectator = false;
+	if(client->resp.pclass == MERC){
+		client->grenadeType = GRENADE_NORMAL;
+	}
+	if(client->resp.pclass == SPY){
+		client->grenadeType = GRENADE_FLASH;
+	}
+	client->blindBase = 0;
+	client->blindTime = 0;
 
 	if (!KillBox (ent))
 	{	// could't spawn in?
@@ -1338,11 +1363,11 @@ void EndObserverMode(edict_t* ent)
 		gi.multicast (ent->s.origin, MULTICAST_PVS);
 	}
 
-	if (ent->client->resp.pclass == 1)
-		gi.bprintf (PRINT_HIGH, "%s is Class 2\n", ent->client->pers.netname); 
+	if (ent->client->resp.pclass == SPY)
+		gi.bprintf (PRINT_HIGH, "%s is a SPY. Ability: Passive cloaking.\n", ent->client->pers.netname); 
 
-	else if (ent->client->resp.pclass == 2)
-		gi.bprintf (PRINT_HIGH, "%s is Class 1\n", ent->client->pers.netname); 
+	else if (ent->client->resp.pclass == MERC)
+		gi.bprintf (PRINT_HIGH, "%s is a MERC. Ability: IR goggles.\n", ent->client->pers.netname); 
 
 }
 
@@ -1377,8 +1402,8 @@ void ClientBeginDeathmatch (edict_t *ent)
 	//	gi.multicast (ent->s.origin, MULTICAST_PVS);
 	//}
 
-	//gi.bprintf (PRINT_HIGH, "%s entered the game\n", ent->client->pers.netname);
-
+	gi.bprintf (PRINT_HIGH, "%s entered the game\n", ent->client->pers.netname);
+	gi.centerprintf (ent, "Welcome! \nchoose your side by typing\n 'merc' or 'spy' in console.\n\nGood luck, you'll need it...\n");
 	// make sure all view stuff is valid
 	ClientEndServerFrame (ent);
 }

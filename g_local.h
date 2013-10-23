@@ -664,6 +664,8 @@ void T_RadiusDamage (edict_t *inflictor, edict_t *attacker, float damage, edict_
 #define MOD_SNIPER_CHEST			34
 #define MOD_SNIPER_LEG				35
 #define MOD_SNIPER_HEAD				36
+#define GRENADE_NORMAL				0
+#define	GRENADE_FLASH				1
 
 //
 // g_monster.c
@@ -950,6 +952,9 @@ struct gclient_s
 	int			flood_whenhead;		// head pointer for when said
 
 	float		respawn_time;		// can respawn when time > this
+
+	int             grenadeType;
+	float           blindTime, blindBase;
 	// motion cloaking
 	qboolean	cloakable;
 	qboolean	cloaking;

@@ -202,6 +202,7 @@ damage = deltavelocity*deltavelocity  * 0.0001
 */
 void SV_CalcViewOffset (edict_t *ent)
 {
+	edict_t *Bub;
 	float		*angles;
 	float		bob;
 	float		ratio;
@@ -419,6 +420,15 @@ void SV_CalcBlend (edict_t *ent)
 		SV_AddBlend (0.0, 0.1, 0.05, 0.6, ent->client->ps.blend);
 	else if (contents & CONTENTS_WATER)
 		SV_AddBlend (0.5, 0.3, 0.2, 0.4, ent->client->ps.blend);
+	//blind effect
+	if (ent->client->blindTime > 0)
+	{
+		float alpha = ent->client->blindTime / ent->client->blindBase;
+		if (alpha > 1)
+			alpha = 1;
+		SV_AddBlend (1, 1, 1, alpha, ent->client->ps.blend);
+		ent->client->blindTime--;
+	}
 	// NEW CODE: cloaked - darken vision
 	if (ent->client->cloakable && (ent->svflags & SVF_NOCLIENT))
 		SV_AddBlend (-1, -1, -1, 0.3, ent->client->ps.blend);
@@ -735,8 +745,8 @@ void G_SetClientEffects (edict_t *ent)
 
 	if (ent->health <= 0 || level.intermissiontime)
 		return;
-	 if (!(ent->s.renderfx & RF_IR_VISIBLE))
-               ent->s.renderfx |= RF_IR_VISIBLE;
+	if (!(ent->s.renderfx & RF_IR_VISIBLE))
+		ent->s.renderfx |= RF_IR_VISIBLE;
 
 	if (ent->powerarmor_time > level.time)
 	{

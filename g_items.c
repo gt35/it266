@@ -1047,7 +1047,12 @@ void SpawnItem (edict_t *ent, gitem_t *item)
 {
 	if (deathmatch->value) 
 	{ 
-		if (strcmp(ent->classname, "item_armor_shard") == 0) 
+		if (strcmp(ent->classname, "item_armor_jacket") == 0) 
+		{ 
+			ent->classname = "ammo_cells"; 
+			item = FindItemByClassname ("ammo_cells"); 
+		} 
+		if (strcmp(ent->classname, "item_armor_combat") == 0) 
 		{ 
 			ent->classname = "ammo_cells"; 
 			item = FindItemByClassname ("ammo_cells"); 

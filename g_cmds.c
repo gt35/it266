@@ -890,30 +890,32 @@ void Cmd_Cloak_f (edict_t *ent)
 {
 	if (ent->client->cloakable ^= 1)
 	{
-		gi.centerprintf (ent, "Motion Cloaking Enabled!\n");
+		gi.centerprintf (ent, "Cloaking Enabled!\n");
 		ent->client->cloaktime = level.time + CLOAK_ACTIVATE_TIME;
 		ent->client->cloaking = true;
 		ent->client->cloakdrain = 0;
 	}
 	else
 	{
-		gi.centerprintf (ent, "Motion Cloaking Disabled!\n");
+		gi.centerprintf (ent, "Cloaking Disabled!\n");
 		ent->svflags &= ~SVF_NOCLIENT;
 		ent->client->cloaking = false;
 	}
 }
 void Cmd_Infrared_f (edict_t *ent) // IR Goggles
 {
-        if (ent->client->goggles) // we're on
-        {
-               ent->client->goggles = 0;
-               ent->client->ps.rdflags &= ~RDF_IRGOGGLES;
-        }
-        else // we're off
-        {
-               ent->client->goggles = 1;
-               ent->client->ps.rdflags |= RDF_IRGOGGLES;
-        }
+	if (ent->client->goggles) 
+	{
+		gi.centerprintf (ent, "IR vision Disabled!\n");
+		ent->client->goggles = 0;
+		ent->client->ps.rdflags &= ~RDF_IRGOGGLES;
+	}
+	else 
+	{
+		gi.centerprintf (ent, "IR vision Enabled!\n");
+		ent->client->goggles = 1;
+		ent->client->ps.rdflags |= RDF_IRGOGGLES;
+	}
 }
 
 /*

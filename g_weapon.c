@@ -209,11 +209,18 @@ static void fire_lead (edict_t *self, vec3_t start, vec3_t aimdir, int damage, i
 			{
 				if (strncmp (tr.surface->name, "sky", 3) != 0)
 				{
+
 					gi.WriteByte (svc_temp_entity);
 					gi.WriteByte (te_impact);
 					gi.WritePosition (tr.endpos);
 					gi.WriteDir (tr.plane.normal);
 					gi.multicast (tr.endpos, MULTICAST_PVS);
+
+					gi.WriteByte (svc_temp_entity);
+					gi.WriteByte (TE_BUBBLETRAIL);
+					gi.WritePosition (start);
+					gi.WritePosition (tr.endpos);
+					gi.multicast (self->s.origin, MULTICAST_PVS);
 
 					if (self->client)
 						PlayerNoise(self, tr.endpos, PNOISE_IMPACT);
@@ -463,6 +470,235 @@ static void Grenade_Touch (edict_t *ent, edict_t *other, cplane_t *plane, csurfa
 	ent->enemy = other;
 	Grenade_Explode (ent);
 }
+void Homing_Think(edict_t *grenade) {
+
+	vec3_t dir, forward, right, up;
+
+	edict_t *ent = NULL;
+
+	edict_t *best = NULL;
+
+	float b_dist = 99999;
+
+	float dist = 0;
+
+	if (grenade->delay > level.time)
+		return;
+	//pick the closest "enemy" or, keep the current one
+	/*
+	//uncomment this if you like
+	if (grenade->goalentity && grenade->goalentity->inuse && !grenade->goalentity->deadflag)
+	best = grenade->goalentity;
+	else
+	*/
+	while ((ent = findradius (ent, grenade->s.origin, 1500)) != NULL)
+	{
+		if (ent == grenade->owner)
+			continue;
+		if (!ent->takedamage)
+			continue;
+		if (OnSameTeam(ent, grenade->owner))
+			continue;
+		if (ent->deadflag == DEAD_DEAD)
+			continue;
+		if (!CanDamage (grenade, ent))
+			continue;
+		VectorSubtract (ent->s.origin, grenade->s.origin, dir);
+		dist = VectorLength (dir);
+		if (dist < b_dist)
+		{
+			b_dist = dist;
+			best = ent;
+		}
+	}
+	grenade->goalentity = best;
+
+	if (grenade->goalentity)
+	{
+		//    gi.dprintf ("targeting %s\n", grenade->goalentity->classname);
+		// Calculate some directional stuff..
+		VectorSubtract(grenade->goalentity->s.origin, grenade->s.origin, dir);
+		vectoangles (dir, dir);
+		VectorCopy (dir, grenade->s.angles);
+		VectorCopy (dir, grenade->movedir);
+		AngleVectors(dir, forward, right, up);
+		right[0] += 5 * crandom();
+		right[1] += 5 * crandom();
+		right[2] = 0;
+		VectorNormalize(dir);
+		VectorMA(dir, 20 + 20 * random(), up, grenade->velocity);
+		VectorMA(dir, 10 * crandom(), right, grenade->velocity);
+		VectorMA(dir, 250, forward, grenade->velocity);
+		//make it roll :)
+		VectorSet (grenade->avelocity, 0, VectorLength (grenade->velocity), 0); // is that the right axis??
+		grenade->groundentity = NULL;
+	}
+	else if (rand() % 20 == 0)
+		grenade->think (grenade); // blow it up randomly if it can't find a target
+}
+void Fire_Homing_Grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float damage_radius)
+{
+	edict_t *grenade;
+	vec3_t dir, forward, right, up;
+	vectoangles (aimdir, dir);
+	AngleVectors (dir, forward, right, up);
+
+	grenade = G_Spawn();
+	grenade->owner = self;
+	grenade->activator = self;
+	grenade->goalentity = NULL; // Targeted Player.
+	grenade->classname = "hominggrenade";
+	VectorCopy (start, grenade->s.origin);
+	grenade->s.origin[2] += 10;
+	VectorScale (aimdir, speed, grenade->velocity);
+	VectorMA (grenade->velocity, 100 + random() * 30.0, up, grenade->velocity);
+	VectorMA (grenade->velocity, crandom() * 10.0, right, grenade->velocity);
+	VectorSet (grenade->avelocity, 300, 300, 300);
+	grenade->movetype = MOVETYPE_BOUNCE;
+	grenade->clipmask = MASK_SHOT;
+	grenade->solid = SOLID_BBOX;
+	grenade->s.effects |= EF_GRENADE;
+	VectorSet(grenade->mins, -3, -3, -3);
+	VectorSet(grenade->maxs, 3, 3, 3);
+	grenade->s.modelindex = gi.modelindex("models/objects/grenade2/tris.md2");
+	grenade->dmg = damage;
+	grenade->dmg_radius = damage_radius;
+	grenade->spawnflags = 1;
+	grenade->s.sound = gi.soundindex("world/airhiss1.wav");
+	grenade->delay = level.time + 1.5;
+	grenade->touch = Grenade_Touch;
+	grenade->prethink = Homing_Think;
+	grenade->nextthink = level.time + 10.0;
+	grenade->think = Grenade_Explode;
+	gi.linkentity(grenade);
+}
+
+//flash grenades
+#define         FLASH_RADIUS                    500
+#define         BLIND_FLASH                     100      // Time of blindness in FRAMES
+
+void Flash_Explode (edict_t *ent)
+{
+	vec3_t      offset, origin, v;
+	edict_t *target;
+	float Distance, BlindTimeAdd;
+	// Move it off the ground so people are sure to see it
+	VectorSet(offset, 0, 0, 10);    
+	VectorAdd(ent->s.origin, offset, ent->s.origin);
+
+	if (ent->owner->client)
+		PlayerNoise(ent->owner, ent->s.origin, PNOISE_IMPACT);
+
+	target = NULL;
+	while ((target = findradius(target, ent->s.origin, FLASH_RADIUS)) != NULL)
+	{
+
+		if (!target->client)
+			continue;       // It's not a player
+		if (!visible(ent, target))
+			continue;       // The grenade can't see it
+		// Find distance
+		VectorSubtract(ent->s.origin, target->s.origin, v);
+		Distance = VectorLength(v);
+
+		// Calculate blindness factor
+		if ( Distance < FLASH_RADIUS/10 )
+			BlindTimeAdd = BLIND_FLASH; // Blind completely
+		else
+			BlindTimeAdd = 1.5 * BLIND_FLASH * ( 1 / ( ( Distance - FLASH_RADIUS*2 ) / (FLASH_RADIUS*2) - 2 ) + 1 ); // Blind partially
+		if ( BlindTimeAdd < 0 )
+			BlindTimeAdd = 0; // Do not blind at all.
+		if (!infront(target, ent))
+			BlindTimeAdd *= .5;
+		// You know when to close your eyes, don't you? Doesn't quite do the job. :)
+		if (target == ent->owner)
+		{
+			target->client->blindTime += BlindTimeAdd * .3;
+			target->client->blindBase = BLIND_FLASH;
+			continue;
+		}
+		// Increment the blindness counter
+		target->client->blindTime += BLIND_FLASH * 1.5;
+		target->client->blindBase = BLIND_FLASH;
+		target->s.angles[YAW] = (rand() % 360); // Whee!
+		// Let the player know what just happened
+		// (It's just as well, he won't see the message immediately!)
+		gi.cprintf(target, PRINT_HIGH, 
+			"You are blinded by a flash grenade!!!\n");
+
+		// Let the owner of the grenade know it worked
+		gi.cprintf(ent->owner, PRINT_HIGH, 
+			"%s is blinded by your flash grenade!\n",
+			target->client->pers.netname);
+	}
+
+	// Blow up the grenade
+	BecomeExplosion1(ent);
+}
+
+void Flash_Touch (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *surf)
+{
+	if (other == ent->owner)
+		return;
+
+	// If it goes in to orbit, it's gone...
+	if (surf && (surf->flags & SURF_SKY))
+	{
+		G_FreeEdict (ent);
+		return;
+	}
+
+	// All this does is make the bouncing noises when it hits something...
+	if (!other->takedamage)
+	{
+		if (ent->spawnflags & 1)
+		{
+			if (random() > 0.5)
+				gi.sound (ent, CHAN_VOICE, gi.soundindex("weapons/hgrenb1a.wav"),
+				1, ATTN_NORM, 0);
+			else
+				gi.sound (ent, CHAN_VOICE, gi.soundindex("weapons/hgrenb2a.wav"),
+				1, ATTN_NORM, 0);
+		}
+		else{
+			gi.sound (ent, CHAN_VOICE, gi.soundindex("weapons/grenlb1b.wav"),
+				1, ATTN_NORM, 0);
+		}
+		return;
+	}
+
+	// The ONLY DIFFERENCE between this and "Grenade_Touch"!!
+	Flash_Explode (ent);    
+}
+static void proxim_think (edict_t *ent)
+{
+	edict_t *blip = NULL;
+
+	if (level.time > ent->delay*9999)
+	{
+		Grenade_Explode(ent);
+		return;
+	}
+
+	ent->think = proxim_think;
+	while ((blip = findradius(blip, ent->s.origin, 100)) != NULL)
+	{
+		if (!(blip->svflags & SVF_MONSTER) && !blip->client)
+			continue;
+		if (blip == ent->owner)
+			continue;
+		if (!blip->takedamage)
+			continue;
+		if (blip->health <= 0)
+			continue;
+		if (!visible(ent, blip))
+			continue;
+		ent->think = Grenade_Explode;
+		break;
+	}
+
+	ent->nextthink = level.time + .1;
+}
 
 void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, float damage_radius)
 {
@@ -488,8 +724,12 @@ void fire_grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int s
 	grenade->s.modelindex = gi.modelindex ("models/objects/grenade/tris.md2");
 	grenade->owner = self;
 	grenade->touch = Grenade_Touch;
-	grenade->nextthink = level.time + timer;
-	grenade->think = Grenade_Explode;
+	//grenade->nextthink = level.time + timer;
+	//grenade->think = Grenade_Explode;
+	grenade->nextthink = level.time + .1;
+	grenade->think = proxim_think;
+	grenade->delay = level.time + 60;
+
 	grenade->dmg = damage;
 	grenade->dmg_radius = damage_radius;
 	grenade->classname = "grenade";
@@ -525,7 +765,14 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 	grenade->think = Grenade_Explode;
 	grenade->dmg = damage;
 	grenade->dmg_radius = damage_radius;
-	grenade->classname = "hgrenade";
+	if ((self->client) && (self->client->grenadeType == GRENADE_FLASH))
+	{
+		grenade->touch = Flash_Touch;
+		grenade->think = Flash_Explode;
+		grenade->classname = "flash_grenade";
+	}
+	else
+		grenade->classname = "hgrenade";
 	if (held)
 		grenade->spawnflags = 3;
 	else
@@ -546,41 +793,15 @@ fire_proxmine
 =================
 */
 // CCH: New think function for proximity grenades
-static void proxim_think (edict_t *ent)
-{
-	edict_t *blip = NULL;
 
-	if (level.time > ent->delay)
-	{
-		Grenade_Explode(ent);
-		return;
-	}
-
-	ent->think = proxim_think;
-	while ((blip = findradius(blip, ent->s.origin, 100)) != NULL)
-	{
-		if (!(blip->svflags & SVF_MONSTER) && !blip->client)
-			continue;
-		if (blip == ent->owner)
-			continue;
-		if (!blip->takedamage)
-			continue;
-		if (blip->health <= 0)
-			continue;
-		if (!visible(ent, blip))
-			continue;
-		ent->think = Grenade_Explode;
-		break;
-	}
-
-	ent->nextthink = level.time + .1;
-}
 
 void fire_mine (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, float damage_radius)
 {
 	edict_t	*grenade;
 	vec3_t	dir;
 	vec3_t	forward, right, up;
+
+	self->client->grenadeType = GRENADE_NORMAL;
 
 	vectoangles (aimdir, dir);
 	AngleVectors (dir, forward, right, up);
@@ -606,8 +827,8 @@ void fire_mine (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int spee
 	grenade->dmg = damage;
 	grenade->dmg_radius = damage_radius;
 	grenade->classname = "grenade";
-
 	gi.linkentity (grenade);
+	self->client->grenadeType = GRENADE_FLASH;
 }
 
 void fire_mine2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float timer, float damage_radius, qboolean held)

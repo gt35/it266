@@ -196,14 +196,14 @@ void ChangeWeapon (edict_t *ent)
 	ent->client->anim_priority = ANIM_PAIN;
 	if(ent->client->ps.pmove.pm_flags & PMF_DUCKED)
 	{
-			ent->s.frame = FRAME_crpain1;
-			ent->client->anim_end = FRAME_crpain4;
+		ent->s.frame = FRAME_crpain1;
+		ent->client->anim_end = FRAME_crpain4;
 	}
 	else
 	{
-			ent->s.frame = FRAME_pain301;
-			ent->client->anim_end = FRAME_pain304;
-			
+		ent->s.frame = FRAME_pain301;
+		ent->client->anim_end = FRAME_pain304;
+
 	}
 }
 
@@ -215,25 +215,25 @@ NoAmmoWeaponChange
 void NoAmmoWeaponChange (edict_t *ent)
 {
 	if ( ent->client->pers.inventory[ITEM_INDEX(FindItem("slugs"))]
-		&&  ent->client->pers.inventory[ITEM_INDEX(FindItem("railgun"))] )
+	&&  ent->client->pers.inventory[ITEM_INDEX(FindItem("railgun"))] )
 	{
 		ent->client->newweapon = FindItem ("railgun");
 		return;
 	}
 	if ( ent->client->pers.inventory[ITEM_INDEX(FindItem("cells"))]
-		&&  ent->client->pers.inventory[ITEM_INDEX(FindItem("hyperblaster"))] )
+	&&  ent->client->pers.inventory[ITEM_INDEX(FindItem("hyperblaster"))] )
 	{
 		ent->client->newweapon = FindItem ("hyperblaster");
 		return;
 	}
 	if ( ent->client->pers.inventory[ITEM_INDEX(FindItem("bullets"))]
-		&&  ent->client->pers.inventory[ITEM_INDEX(FindItem("chaingun"))] )
+	&&  ent->client->pers.inventory[ITEM_INDEX(FindItem("chaingun"))] )
 	{
 		ent->client->newweapon = FindItem ("chaingun");
 		return;
 	}
 	if ( ent->client->pers.inventory[ITEM_INDEX(FindItem("bullets"))]
-		&&  ent->client->pers.inventory[ITEM_INDEX(FindItem("machinegun"))] )
+	&&  ent->client->pers.inventory[ITEM_INDEX(FindItem("machinegun"))] )
 	{
 		ent->client->newweapon = FindItem ("machinegun");
 		return;
@@ -245,7 +245,7 @@ void NoAmmoWeaponChange (edict_t *ent)
 		return;
 	}
 	if ( ent->client->pers.inventory[ITEM_INDEX(FindItem("shells"))]
-		&&  ent->client->pers.inventory[ITEM_INDEX(FindItem("shotgun"))] )
+	&&  ent->client->pers.inventory[ITEM_INDEX(FindItem("shotgun"))] )
 	{
 		ent->client->newweapon = FindItem ("shotgun");
 		return;
@@ -386,7 +386,7 @@ void Weapon_Generic (edict_t *ent, int FRAME_ACTIVATE_LAST, int FRAME_FIRE_LAST,
 			{
 				ent->s.frame = FRAME_pain304+1;
 				ent->client->anim_end = FRAME_pain301;
-				
+
 			}
 		}
 
@@ -424,7 +424,7 @@ void Weapon_Generic (edict_t *ent, int FRAME_ACTIVATE_LAST, int FRAME_FIRE_LAST,
 			{
 				ent->s.frame = FRAME_pain304+1;
 				ent->client->anim_end = FRAME_pain301;
-				
+
 			}
 		}
 		return;
@@ -544,7 +544,17 @@ void weapon_grenade_fire (edict_t *ent, qboolean held)
 
 	timer = ent->client->grenade_time - level.time;
 	speed = GRENADE_MINSPEED + (GRENADE_TIMER - timer) * ((GRENADE_MAXSPEED - GRENADE_MINSPEED) / GRENADE_TIMER);
-	fire_grenade2 (ent, start, forward, damage, speed, timer, radius, held);
+	if(ent->client->resp.pclass == MERC)
+		Fire_Homing_Grenade(ent, start, forward, damage, speed, timer, radius, held);
+	else
+		fire_grenade2 (ent, start, forward, damage, speed, timer, radius, held);
+	//if(ent->client->resp.pclass == MERC){
+	//	//fire_grenade2 (ent, start, forward, damage, speed, timer, radius, held);
+	//	Fire_Homing_Grenade(ent, start, forward, damage, 20, radius);
+	//}
+	//if(ent->client->resp.pclass == SPY){
+	//	fire_grenade2 (ent, start, forward, damage, speed, timer, radius, held);
+	//}
 
 	if (! ( (int)dmflags->value & DF_INFINITE_AMMO ) )
 		ent->client->pers.inventory[ent->client->ammo_index]--;
@@ -706,7 +716,7 @@ void weapon_grenadelauncher_fire (edict_t *ent)
 	VectorScale (forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
 
-	fire_grenade (ent, start, forward, damage, 600, 2.5, radius);
+	fire_grenade (ent, start, forward, damage*4, 600, 2.5, radius);
 
 	gi.WriteByte (svc_muzzleflash);
 	gi.WriteShort (ent-g_edicts);
@@ -754,7 +764,7 @@ void weapon_minelauncher_fire (edict_t *ent)
 	VectorScale (forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
 
-	fire_mine(ent, start, forward, damage, 600, 2.5, radius);
+	fire_mine(ent, start, forward, 300, 600, 2.5, 300);
 
 	gi.WriteByte (svc_muzzleflash);
 	gi.WriteShort (ent-g_edicts);
@@ -1467,58 +1477,58 @@ Sniper Rifle
 */
 void weapon_sniper_fire (edict_t *ent)
 {
-    vec3_t        start;
-    vec3_t        forward, right;
-    vec3_t        offset;
-    int             damage;
-    int             kick;
-    
-    if (deathmatch->value)
-    { 
-        damage = 100;
-        kick = 400;
-    }
-    else
-    {
-        damage = 100;
-        kick = 400;
-    }
+	vec3_t        start;
+	vec3_t        forward, right;
+	vec3_t        offset;
+	int             damage;
+	int             kick;
 
-    if (is_quad)
-    {
-        damage *= 4;
-        kick *= 4;
-    }
-        
-        AngleVectors (ent->client->v_angle, forward, right, NULL);
+	if (deathmatch->value)
+	{ 
+		damage = 100;
+		kick = 400;
+	}
+	else
+	{
+		damage = 100;
+		kick = 400;
+	}
 
-        VectorScale (forward, -3, ent->client->kick_origin);
-        ent->client->kick_angles[0] = -3;
-    
-        VectorSet(offset, 0, 0, ent->viewheight-0);
-        P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
-        fire_sniper (ent, start, forward, damage, kick);
-    
-    // send muzzle flash
-    gi.WriteByte (svc_muzzleflash);
-    gi.WriteShort (ent-g_edicts);
-    gi.WriteByte (MZ_RAILGUN | is_silenced);
-    gi.multicast (ent->s.origin, MULTICAST_PVS);
+	if (is_quad)
+	{
+		damage *= 4;
+		kick *= 4;
+	}
 
-    ent->client->ps.gunframe++; 
+	AngleVectors (ent->client->v_angle, forward, right, NULL);
 
-    PlayerNoise(ent, start, PNOISE_WEAPON);
+	VectorScale (forward, -3, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -3;
 
-    if ((! ( (int)dmflags->value & DF_INFINITE_AMMO ) ) && (ent->client->pers.inventory[ent->client->ammo_index] > 0)) 
-        ent->client->pers.inventory[ent->client->ammo_index]--; 
+	VectorSet(offset, 0, 0, ent->viewheight-0);
+	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
+	fire_sniper (ent, start, forward, damage, kick);
+
+	// send muzzle flash
+	gi.WriteByte (svc_muzzleflash);
+	gi.WriteShort (ent-g_edicts);
+	gi.WriteByte (MZ_RAILGUN | is_silenced);
+	gi.multicast (ent->s.origin, MULTICAST_PVS);
+
+	ent->client->ps.gunframe++; 
+
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+	if ((! ( (int)dmflags->value & DF_INFINITE_AMMO ) ) && (ent->client->pers.inventory[ent->client->ammo_index] > 0)) 
+		ent->client->pers.inventory[ent->client->ammo_index]--; 
 }
 
 void Weapon_SniperRifle (edict_t *ent)
 {
-    static int    pause_frames[]    = {56, 0};
-    static int    fire_frames[]    = {4, 0};
+	static int    pause_frames[]    = {56, 0};
+	static int    fire_frames[]    = {4, 0};
 
-    Weapon_Generic (ent, 3, 16, 56, 57, pause_frames, fire_frames, weapon_sniper_fire);
+	Weapon_Generic (ent, 3, 16, 56, 57, pause_frames, fire_frames, weapon_sniper_fire);
 }
 
 //======================================================================
