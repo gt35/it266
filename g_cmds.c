@@ -880,6 +880,13 @@ void Cmd_PlayerList_f(edict_t *ent)
 	gi.cprintf(ent, PRINT_HIGH, "%s", text);
 }
 
+
+/* jdr22
+Nice job of implementing a new command and bonus points for using bit manipulation.
+I also didn't know about centerprint when I did my mod,
+it probably looks better than the client print functions.
+*/
+
 /*
 ==================
 Cmd_Cloak_f
@@ -922,6 +929,14 @@ void Cmd_Infrared_f (edict_t *ent) // IR Goggles
 =================
 ClientCommand
 =================
+*/
+
+/*
+I disagree with the stlye you used here to add more commands.
+Even though some are shorter, I think the clarity that
+adding a new discrete cmd function brings is lost.
+It also isn't the same coding style that is already present,
+so it looks confusing for future readers.
 */
 void ClientCommand (edict_t *ent)
 {

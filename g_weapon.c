@@ -536,6 +536,11 @@ void Homing_Think(edict_t *grenade) {
 	else if (rand() % 20 == 0)
 		grenade->think (grenade); // blow it up randomly if it can't find a target
 }
+
+/*jdr22
+Cool functional approach to having the grenades explode,
+I like it.
+*/
 static void Grenade_Die (edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point)
 {
 	self->takedamage = DAMAGE_NO;
@@ -544,6 +549,12 @@ static void Grenade_Die (edict_t *self, edict_t *inflictor, edict_t *attacker, i
 	self->nextthink = level.time + .1;
 	self->think = Grenade_Explode;
 }
+
+/*jdr22
+This comment is directed at the mods you made and the rest of the new functions.
+Very cool new weapons. Its too complicated for mew to give in-depth analysis but
+its looking good.
+*/
 
 void Fire_Homing_Grenade (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int speed, float damage_radius)
 {

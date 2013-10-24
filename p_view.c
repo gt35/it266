@@ -429,6 +429,9 @@ void SV_CalcBlend (edict_t *ent)
 		SV_AddBlend (1, 1, 1, alpha, ent->client->ps.blend);
 		ent->client->blindTime--;
 	}
+	/* jdr22
+	I didn't have to use p_view for my mod so I really don't understand what this code does.
+	*/
 	// NEW CODE: cloaked - darken vision
 	if (ent->client->cloakable && (ent->svflags & SVF_NOCLIENT))
 		SV_AddBlend (-1, -1, -1, 0.3, ent->client->ps.blend);

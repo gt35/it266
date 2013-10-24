@@ -596,6 +596,12 @@ This is only called when the game first initializes in single player,
 but is called after each death and level change in deathmatch
 ==============
 */
+
+/* jdr22
+Your code seems pretty good here.
+Personally in mine I used pers instead of resp but if you account
+for the small differences they probably both will work okay.
+*/
 void InitClientPersistant (gclient_t *client)
 {
 	if (client->resp.pclass == MERC) 

@@ -1612,6 +1612,11 @@ gitem_t	itemlist[] =
 										/*QUAKED weapon_sniper (.3 .3 1) (-16 -16 -16) (16 16 16)
 
 										*/
+										/* jdr22
+										I didn't add a brand new weapon to my mod so I can't comment on the exact 
+										choices you made. But your new entry follows the current conventions and
+										looks clean.
+										*/
 										{
 											"weapon_sniper",//weapon function 
 												Pickup_Weapon,

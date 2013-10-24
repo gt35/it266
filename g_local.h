@@ -654,6 +654,10 @@ void T_RadiusDamage (edict_t *inflictor, edict_t *attacker, float damage, edict_
 #define DEFAULT_SHOTGUN_COUNT	12
 #define DEFAULT_SSHOTGUN_COUNT	20
 
+/* jdr22
+Nice job using defined constants instead of magic numbers.
+I did something similar for my own mod.
+*/
 //custom flags
 #define CLOAK_ACTIVATE_TIME			1	// cloak after x seconds
 #define CLOAK_DRAIN					20		// every CLOAK_DRAIN frames,
