@@ -931,12 +931,17 @@ ClientCommand
 =================
 */
 
-/*
+/*jdr22
 I disagree with the stlye you used here to add more commands.
 Even though some are shorter, I think the clarity that
 adding a new discrete cmd function brings is lost.
 It also isn't the same coding style that is already present,
 so it looks confusing for future readers.
+
+gt35
+Thanks for the tip, Ill keep it like this because i only have 2 classes. 
+I also added some comments and tried to keep the style consistent to clarify
+things for readers.
 */
 void ClientCommand (edict_t *ent)
 {
@@ -1017,18 +1022,21 @@ void ClientCommand (edict_t *ent)
 	else if (Q_stricmp (cmd, "putaway") == 0)
 		Cmd_PutAway_f (ent);
 	else if (Q_stricmp (cmd, "wave") == 0)
-		Cmd_Wave_f (ent);
-	else if (Q_stricmp (cmd, "merc") == 0)
+		Cmd_Wave_f (ent);	
+	else if (Q_stricmp(cmd, "playerlist") == 0)
+		Cmd_PlayerList_f(ent);
+	//NEW COMMANDS BEGIN HERE	
+	else if (Q_stricmp (cmd, "merc") == 0)//changes player class to merc
 	{
-		ent->client->resp.pclass = MERC;
-		EndObserverMode(ent);
+		ent->client->resp.pclass = MERC;//set class to merc
+		EndObserverMode(ent);//ends observer mode 
 	}
-	else if (Q_stricmp (cmd, "spy") == 0) 
+	else if (Q_stricmp (cmd, "spy") == 0) //similar to above except for spy class
 	{
 		ent->client->resp.pclass = SPY;
 		EndObserverMode(ent);
 	}
-	else if (Q_stricmp (cmd, "class") == 0) 
+	else if (Q_stricmp (cmd, "class") == 0) //command to check what class player is
 	{
 		if (ent->client->resp.pclass == MERC)
 			gi.cprintf(ent, PRINT_HIGH, "You are a merc.\n");
@@ -1036,17 +1044,15 @@ void ClientCommand (edict_t *ent)
 			gi.cprintf(ent, PRINT_HIGH, "You are a spy.\n");
 		else
 			gi.cprintf(ent, PRINT_HIGH, "You are an OBSERVER.\n");
-	}
-	else if (Q_stricmp(cmd, "playerlist") == 0)
-		Cmd_PlayerList_f(ent);
-	else if (Q_stricmp (cmd, "ability") == 0){
-		if (ent->client->resp.pclass == SPY){
+	}	
+	else if (Q_stricmp (cmd, "ability") == 0){//uses class specific ability. set keybind for ease of use.
+		if (ent->client->resp.pclass == SPY)//if class is spy then cloack
 			Cmd_Cloak_f (ent);
-		}
-		if (ent->client->resp.pclass == MERC){
+		if (ent->client->resp.pclass == MERC)//if class is merc than activate IR goggles
 			Cmd_Infrared_f (ent);
-		}
 	}
+	//END NEW COMMANDS
+
 	else	// anything that doesn't match a command will be a chat
 		Cmd_Say_f (ent, false, true);
 }
